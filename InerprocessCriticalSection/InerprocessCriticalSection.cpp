@@ -19,13 +19,15 @@ int main()
     LPCTSTR bufForCrSection,bufForSharedMemory;
     HANDLE mappingForCrSection, mappingForMemory;
     CRITICAL_SECTION crSection;
-    STARTUPINFO siProcFirst = { sizeof(STARTUPINFO) }, siProcSecond = { sizeof(STARTUPINFO) };
-    PROCESS_INFORMATION piProcFirst, piProcSecond;
+    STARTUPINFO siProcFirst = { sizeof(STARTUPINFO) }, siProcSecond = { sizeof(STARTUPINFO) }, siProcThird = { sizeof(STARTUPINFO) };
+    PROCESS_INFORMATION piProcFirst, piProcSecond, piProcThird;
     std::wstring CommandLineFirst(L"D:\\3course\\5sem\\OSaSP\\InerprocessCriticalSection\\Debug\\FirstProc.exe");
     std::wstring CommandLineSecond(L"D:\\3course\\5sem\\OSaSP\\InerprocessCriticalSection\\Debug\\SecondProc.exe");
+    std::wstring CommandLineThird(L"D:\\3course\\5sem\\OSaSP\\InerprocessCriticalSection\\Debug\\ThirdProc.exe");
 
     LPWSTR lpwCmdLineFirst = &CommandLineFirst[0];
     LPWSTR lpwCmdLineSecond = &CommandLineSecond[0];
+    LPWSTR lpwCmdLineThird = &CommandLineThird[0];
 
     InitializeCriticalSection(&crSection);
 
@@ -57,27 +59,36 @@ int main()
         return -1;
     }
 
-    bool fl = true;
-    while (fl) {
-        if (TryEnterCriticalSection(&crSection)) {
-            for (int i = 0; i < N; i++) {
-                std::cout << "main read " << ((int*)bufForSharedMemory)[i] << std::endl;
-                ((int*)bufForSharedMemory)[i] += 5;
-                std::cout << "main wrote " << ((int*)bufForSharedMemory)[i] << std::endl;
-                Sleep(1000);
-            }
-        }
-        LeaveCriticalSection(&crSection);
-        fl = false;
+    res = CreateProcess(NULL, lpwCmdLineThird, NULL, NULL, FALSE, 0, NULL, NULL, &siProcThird, &piProcThird);
+    if (!res) {
+        freeResources(&mappingForCrSection, &bufForCrSection, NULL);
+        freeResources(&mappingForMemory, &bufForSharedMemory, &crSection);
+        return -1;
     }
+   // Sleep(2000);
+    bool fl = true;
+    //while (fl) {
+    //    if (TryEnterCriticalSection(&crSection)) {
+    //        for (int i = 0; i < N; i++) {
+    //            std::cout << "main read " << ((int*)bufForSharedMemory)[i] << std::endl;
+    //            ((int*)bufForSharedMemory)[i] += 5;
+    //            std::cout << "main wrote " << ((int*)bufForSharedMemory)[i] << std::endl;
+    //        }
+    //        LeaveCriticalSection(&crSection);
+    //        fl = false;
+    //    }    
+    //}
  
     WaitForSingleObject(piProcFirst.hProcess, INFINITE);
     WaitForSingleObject(piProcSecond.hProcess, INFINITE);
+    WaitForSingleObject(piProcThird.hProcess, INFINITE);
 
     CloseHandle(piProcFirst.hProcess);
     CloseHandle(piProcFirst.hThread);
     CloseHandle(piProcSecond.hProcess);
-    CloseHandle(piProcSecond.hThread);
+    CloseHandle(piProcSecond.hThread);    
+    CloseHandle(piProcThird.hProcess);
+    CloseHandle(piProcThird.hThread);
 
     freeResources(&mappingForCrSection, &bufForCrSection, NULL);
     freeResources(&mappingForMemory, &bufForSharedMemory, &crSection);

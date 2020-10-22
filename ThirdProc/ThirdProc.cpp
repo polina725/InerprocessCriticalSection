@@ -1,5 +1,4 @@
 ﻿#include <iostream>
-#include <fstream>
 #include <windows.h>
 #include <conio.h>
 #include <stdio.h>
@@ -19,23 +18,21 @@ int main()
     HANDLE mappingForCrSection, mappingForMemory;
     CRITICAL_SECTION* crSection;
 
-    mappingForCrSection = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, CRITICAL_SECTION_NAME);
+    mappingForCrSection = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, CRITICAL_SECTION_NAME);// CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeOfSection, CRITICAL_SECTION_NAME);
     if (mappingForCrSection == NULL) {
-        _getch();
         return -1;
     }
     crSection = (CRITICAL_SECTION*)MapViewOfFile(mappingForCrSection, FILE_MAP_ALL_ACCESS, 0, 0, sizeOfSection);
     if (crSection == NULL) {
         freeResources(&mappingForCrSection, NULL);
-        _getch();
         return NULL;
     }
 
 
-    mappingForMemory = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeOfSharedMemory, SHARED_MEMORY_NAME);
+    mappingForMemory = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, SHARED_MEMORY_NAME);// CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeOfSharedMemory, SHARED_MEMORY_NAME);
     if (mappingForMemory == NULL) {
         freeResources(&mappingForCrSection, NULL);
-        UnmapViewOfFile(crSection);;
+        UnmapViewOfFile(crSection);
         _getch();
         return -1;
     }
@@ -52,10 +49,10 @@ int main()
     while (fl) {
         if (TryEnterCriticalSection(crSection)) {
             for (int i = 0; i < N; i++) {
-                std::cout << "SecondProc read " << ((int*)bufForSharedMemory)[i] << std::endl << std::flush;
-                ((int*)bufForSharedMemory)[i] *= 2;
-                std::cout << "SecondProc wrote " << ((int*)bufForSharedMemory)[i] << std::endl << std::flush;
-                Sleep(50);
+                std::cout << "ThirdProc read " << ((int*)bufForSharedMemory)[i] << std::endl << std::flush;
+                ((int*)bufForSharedMemory)[i] *= 3;
+                std::cout << "ThirdProc wrote " << ((int*)bufForSharedMemory)[i] << std::endl << std::flush;
+                Sleep(500);
             }
             LeaveCriticalSection(crSection);
             fl = false;
@@ -65,7 +62,6 @@ int main()
     freeResources(&mappingForCrSection, NULL);
     UnmapViewOfFile(crSection);
     freeResources(&mappingForMemory, &bufForSharedMemory);
-
     _getch();
     return 0;
 }
