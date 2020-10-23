@@ -72,21 +72,3 @@ void freeResources(HANDLE* mapping, LPCTSTR* buff) {
     if (mapping != NULL)
         CloseHandle(*mapping);
 }
-/*    HANDLE mutex;
-    mutex = OpenMutex(
-                        MUTEX_ALL_ACCESS,// request full access
-                        FALSE,                             // handle not inheritable
-                        MUTEX_NAME);
-    if (mutex == NULL) {
-        printf("Process -%d- failded to open mutex\nError: %d.\n", GetCurrentProcessId(), GetLastError());
-        _getch();
-        return -1;
-    }
-    else {
-        WaitForSingleObject(mutex, INFINITE);
-        std::cout << GetCurrentProcessId() << std::endl;
-        if(ReleaseMutex(mutex))
-            printf("Process -%d- released mutex\n", GetCurrentProcessId()); ;
-    }
-    _getch();
-    return 0;*/
